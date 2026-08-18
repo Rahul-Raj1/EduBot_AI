@@ -1,0 +1,201 @@
+question,answer
+What is Artificial Intelligence?,"Artificial Intelligence (AI) is the field of computer science that builds systems capable of performing tasks that normally require human intelligence, such as reasoning, learning, perception, and decision making."
+What is an AI agent?,"An AI agent is a system that perceives its environment, processes information, and takes actions to achieve a goal."
+What is supervised AI?,"Supervised AI usually refers to AI systems trained with labeled examples, where each training input is paired with a known target or answer."
+What is weak AI?,"Weak AI, or narrow AI, is designed to perform specific tasks rather than possessing general human-like intelligence."
+What is artificial general intelligence?,Artificial General Intelligence (AGI) is a hypothetical form of AI that could perform a broad range of intellectual tasks across domains at a human-like level.
+What is a knowledge base?,"A knowledge base is an organized collection of facts, rules, documents, or question-answer pairs that an information system can use to answer queries."
+What is expert system?,An expert system is an AI application that uses domain knowledge and inference rules to solve problems in a specialized area.
+What is inference in AI?,"Inference is the process of using available information, learned patterns, or rules to derive a conclusion or prediction."
+What is machine perception?,"Machine perception is the ability of a computer system to interpret information from inputs such as images, audio, text, or sensors."
+What is computer vision?,Computer vision is an AI field that enables computers to interpret and analyze visual information such as images and videos.
+What is natural language processing?,"Natural Language Processing (NLP) is an AI field focused on enabling computers to process, understand, and generate human language."
+What is speech recognition?,Speech recognition converts spoken language into machine-readable text or structured information.
+What is recommendation system?,"A recommendation system predicts items, content, or services that may be relevant to a user based on data such as preferences, behavior, or item similarity."
+What is search in AI?,Search in AI explores possible states or solutions to find an action sequence or solution that satisfies a goal.
+What is heuristic?,A heuristic is a rule or estimate used to guide search toward promising solutions without exhaustively evaluating every possibility.
+What is explainable AI?,Explainable AI focuses on making an AI system's predictions or decisions understandable to people.
+What is AI bias?,"AI bias occurs when systematic patterns in data, design, or evaluation cause an AI system to produce unfair or skewed outcomes."
+What is model evaluation?,Model evaluation measures how well an AI or machine learning system performs on data using suitable metrics and test procedures.
+What is responsible AI?,"Responsible AI is the practice of developing and deploying AI with attention to reliability, fairness, transparency, privacy, safety, and accountability."
+What is automation using AI?,AI automation uses models or intelligent decision systems to perform tasks that previously required repeated manual judgment or processing.
+What is Machine Learning?,"Machine Learning (ML) is a branch of AI in which algorithms learn patterns from data to make predictions, classifications, or decisions."
+What is supervised learning?,Supervised learning trains a model using labeled input-output examples so it can learn to predict the target for new inputs.
+What is unsupervised learning?,Unsupervised learning finds patterns or structure in data without using predefined target labels.
+What is reinforcement learning?,"Reinforcement learning trains an agent through interactions with an environment, using rewards or penalties to encourage useful behavior."
+What is classification?,Classification is a supervised learning task in which a model predicts a discrete class or category.
+What is regression?,Regression is a supervised learning task in which a model predicts a continuous numerical value.
+What is clustering?,Clustering groups similar data points together without requiring predefined class labels.
+What is linear regression?,Linear regression models the relationship between input variables and a continuous target using a linear function.
+What is logistic regression?,Logistic regression is a classification algorithm that estimates class probabilities using a logistic function.
+What is decision tree?,A decision tree predicts an outcome by applying a sequence of feature-based decision rules represented as a tree.
+What is random forest?,Random forest is an ensemble method that combines predictions from many decision trees to improve generalization and robustness.
+What is K-nearest neighbors?,K-nearest neighbors (KNN) predicts a sample's class or value using the labels or values of its closest training examples.
+What is support vector machine?,A Support Vector Machine (SVM) finds a decision boundary that separates classes while maximizing the margin between them.
+What is overfitting?,"Overfitting occurs when a model learns training data too closely, including noise, and performs poorly on unseen data."
+What is underfitting?,"Underfitting occurs when a model is too simple to capture important patterns in the data, leading to poor training and test performance."
+What is cross validation?,Cross-validation repeatedly splits data into training and validation portions to estimate how well a model generalizes.
+What is feature engineering?,"Feature engineering creates, transforms, or selects input variables so that a machine learning model can learn useful patterns more effectively."
+What is feature scaling?,"Feature scaling transforms numerical features to comparable ranges, which can be important for distance-based and gradient-based algorithms."
+What is hyperparameter tuning?,"Hyperparameter tuning searches for useful settings such as learning rate, tree depth, or number of neighbors before or during model training."
+What is data leakage?,"Data leakage occurs when information that would not be available at prediction time improperly enters model training, producing overly optimistic evaluation results."
+What is Deep Learning?,Deep learning is a machine learning approach that uses neural networks with multiple computational layers to learn complex representations from data.
+What is a neural network?,A neural network is a computational model made of connected layers of units that transform inputs and learn parameters from data.
+What is a neuron?,"A neuron is a basic neural-network unit that combines inputs using learned weights and a bias, then applies an activation function."
+What is an activation function?,An activation function introduces non-linearity into a neural network so it can learn complex relationships.
+What is ReLU?,"ReLU, or Rectified Linear Unit, outputs zero for negative inputs and the input itself for positive inputs, and is widely used in hidden neural-network layers."
+What is sigmoid activation?,The sigmoid function maps a real-valued input to a value between 0 and 1 and is often used for binary probability outputs.
+What is softmax?,"Softmax converts a vector of scores into values that sum to one, making it useful for multi-class probability outputs."
+What is backpropagation?,Backpropagation computes gradients of a loss with respect to model parameters by applying the chain rule backward through a neural network.
+What is gradient descent?,Gradient descent updates model parameters in a direction that reduces the training loss.
+What is epoch?,An epoch is one complete pass through the training dataset during model training.
+What is batch size?,Batch size is the number of training examples processed before a model update is performed.
+What is learning rate?,Learning rate controls the size of parameter updates made by an optimization algorithm.
+What is convolutional neural network?,A Convolutional Neural Network (CNN) uses convolution operations to learn spatial features and is widely used for image and video tasks.
+What is recurrent neural network?,A Recurrent Neural Network (RNN) processes sequential data while maintaining information from previous steps through recurrent connections.
+What is LSTM?,Long Short-Term Memory (LSTM) is an RNN architecture designed to retain useful information over longer sequences using gated memory cells.
+What is dropout?,Dropout is a regularization technique that randomly disables a fraction of neural-network units during training to reduce overfitting.
+What is batch normalization?,Batch normalization normalizes intermediate neural-network activations using statistics from mini-batches and can make training more stable.
+What is transfer learning?,Transfer learning reuses knowledge learned by a model on one task or dataset as a starting point for another related task.
+What is an embedding in deep learning?,"An embedding is a dense numerical representation of an object such as a word, sentence, image, or item that captures useful relationships."
+What is a loss function?,A loss function measures the difference between a model's prediction and the desired target and provides a signal for training.
+What is Python?,"Python is a high-level, general-purpose programming language known for readable syntax and a large ecosystem of libraries."
+What is a Python list?,"A Python list is an ordered, mutable collection that can store multiple values, including values of different types."
+What is a Python tuple?,"A Python tuple is an ordered, immutable collection of values."
+What is a Python dictionary?,A Python dictionary stores key-value pairs and provides efficient lookup by key.
+What is a Python set?,A Python set is an unordered collection of unique elements.
+What is a function in Python?,"A function is a reusable block of code that can accept inputs, perform operations, and optionally return a result."
+What is a lambda function?,"A lambda is a small anonymous function written as a single expression, often used for short operations."
+What is list comprehension?,"List comprehension is a concise Python syntax for creating a list by applying an expression to items from an iterable, optionally with a condition."
+What is a module in Python?,"A module is a Python file containing code such as functions, classes, and variables that can be imported into another program."
+What is a package in Python?,A Python package is a structured collection of modules that can be imported as a unit.
+What is exception handling?,"Exception handling lets a Python program detect and manage runtime errors using constructs such as try, except, else, and finally."
+What is object oriented programming?,"Object-oriented programming organizes software around objects that combine data and behavior, commonly using classes and methods."
+What is a class in Python?,A class is a blueprint for creating objects and defining their attributes and methods.
+What is inheritance in Python?,Inheritance allows a class to reuse or extend attributes and methods from another class.
+What is a virtual environment?,A Python virtual environment is an isolated environment for installing project-specific Python packages without affecting other projects.
+What is pip?,pip is the standard Python package installer used to install and manage packages from Python package indexes.
+What is NumPy?,"NumPy is a Python library for efficient numerical computing, especially arrays and vectorized mathematical operations."
+What is Pandas?,Pandas is a Python library for data manipulation and analysis using structures such as Series and DataFrame.
+What is a DataFrame?,A DataFrame is a two-dimensional labeled data structure in Pandas with rows and columns.
+What is a Python iterator?,"An iterator is an object that produces values one at a time through the iterator protocol, typically using __iter__ and __next__."
+What is Data Science?,"Data Science combines statistics, programming, domain knowledge, and machine learning to extract useful insights and build data-driven solutions."
+What is data cleaning?,"Data cleaning identifies and fixes issues such as missing values, duplicates, inconsistent formats, and invalid records."
+What is exploratory data analysis?,"Exploratory Data Analysis (EDA) uses summaries and visualizations to understand distributions, relationships, outliers, and data quality."
+What is data preprocessing?,Data preprocessing transforms raw data into a suitable form for analysis or machine learning.
+What is a feature?,A feature is an input variable or measurable characteristic used by an analytical or machine learning model.
+What is a target variable?,A target variable is the outcome a supervised machine learning model is trained to predict.
+What is missing data?,Missing data occurs when one or more expected values are absent from a dataset.
+What is an outlier?,An outlier is an observation that is unusually far from the general pattern of the data.
+What is data visualization?,"Data visualization represents information graphically to make patterns, comparisons, trends, and anomalies easier to understand."
+What is a dashboard?,"A dashboard is an interactive collection of charts, tables, and indicators designed to monitor and communicate important information."
+What is ETL?,"ETL stands for Extract, Transform, Load and describes a process of extracting data, transforming it, and loading it into a destination system."
+What is a data pipeline?,A data pipeline is a sequence of automated steps that moves and transforms data from sources to destinations.
+What is sampling?,Sampling selects a subset of observations from a larger population for analysis.
+What is normalization?,Normalization commonly refers to transforming numerical values to a comparable scale; the exact formula depends on the chosen technique.
+What is one hot encoding?,"One-hot encoding represents categorical values as binary indicator columns, with one column typically corresponding to each category."
+What is label encoding?,Label encoding maps categorical values to integer labels.
+What is train test split?,A train-test split divides a dataset into training data for learning and test data for evaluating performance on unseen examples.
+What is data imputation?,"Data imputation replaces missing values using a defined method such as a mean, median, mode, or model-based estimate."
+What is correlation?,Correlation measures the strength and direction of association between two variables.
+What is a data analyst?,"A data analyst prepares, analyzes, visualizes, and communicates data to help answer business or operational questions."
+What is mean?,"The mean is the arithmetic average, calculated by adding all observations and dividing by the number of observations."
+What is median?,"The median is the middle value after data is arranged in order; for an even number of observations, it is commonly the average of the two middle values."
+What is mode?,The mode is the value or category that occurs most frequently in a dataset.
+What is variance?,Variance measures the average squared deviation of observations from their mean.
+What is standard deviation?,Standard deviation is the square root of variance and describes the typical spread of observations around the mean.
+What is range?,Range is the difference between the maximum and minimum values in a dataset.
+What is interquartile range?,The interquartile range (IQR) is the difference between the third quartile and first quartile and describes the spread of the middle 50 percent of data.
+What is percentile?,A percentile indicates the value below which a specified percentage of observations fall.
+What is probability?,Probability is a numerical measure between zero and one that represents how likely an event is under a specified model or experiment.
+What is conditional probability?,Conditional probability measures the probability of an event given that another event or condition is known.
+What is Bayes theorem?,Bayes' theorem relates conditional probabilities and can be used to update the probability of a hypothesis after observing evidence.
+What is hypothesis testing?,Hypothesis testing uses sample data to evaluate evidence about a population claim or hypothesis.
+What is null hypothesis?,"The null hypothesis is the baseline claim tested in a statistical hypothesis test, often representing no effect or no difference."
+What is p value?,A p-value measures how unusual the observed data would be if the null hypothesis were true under the assumptions of the test.
+What is confidence interval?,A confidence interval is an interval-estimation method that provides a range of plausible values for a population parameter under a specified confidence procedure.
+What is normal distribution?,A normal distribution is a continuous probability distribution characterized by a symmetric bell-shaped curve determined by its mean and standard deviation.
+What is skewness?,Skewness describes asymmetry in a probability distribution or dataset relative to its center.
+What is covariance?,"Covariance indicates how two variables vary together, with positive values generally indicating they increase together and negative values indicating opposite movement."
+What is population and sample?,"A population is the full group of interest, while a sample is a subset selected from that population for analysis."
+What is descriptive statistics?,"Descriptive statistics summarize observed data using measures such as mean, median, spread, counts, and visualizations."
+What is NLP?,"Natural Language Processing (NLP) is the area of AI that enables computers to process, understand, analyze, and generate human language."
+What is tokenization?,"Tokenization splits text into smaller units such as words, subwords, or tokens for further processing."
+What is stemming?,Stemming reduces words to a crude root-like form by removing or modifying word endings according to simple rules.
+What is lemmatization?,Lemmatization reduces a word to its dictionary base form using linguistic information.
+What is stop word removal?,Stop word removal filters out selected common words that may contribute little to a particular NLP task.
+What is TF-IDF?,"TF-IDF represents a term using its frequency in a document and its inverse frequency across documents, giving higher weight to terms that are distinctive."
+What is word embedding?,A word embedding represents words as dense numerical vectors so that semantic and syntactic relationships can be modeled.
+What is sentence embedding?,A sentence embedding represents an entire sentence or text passage as a dense vector intended to capture its meaning.
+What is bag of words?,Bag of Words represents text using counts or presence of words while ignoring word order.
+What is cosine similarity?,Cosine similarity measures the angle-based similarity between two vectors and is commonly used to compare text embeddings.
+What is sentiment analysis?,"Sentiment analysis classifies or scores text according to expressed sentiment such as positive, negative, or neutral."
+What is named entity recognition?,"Named Entity Recognition (NER) identifies entities such as people, organizations, locations, dates, and other predefined types in text."
+What is text classification?,Text classification assigns text to one or more predefined categories based on its content.
+What is question answering?,Question answering is an NLP task in which a system produces an answer to a natural-language question using available information.
+What is semantic search?,Semantic search retrieves content based on meaning rather than relying only on exact keyword matches.
+What is a transformer?,A Transformer is a neural-network architecture based on attention mechanisms and is widely used for language and multimodal tasks.
+What is attention?,Attention allows a model to assign different importance to input elements when producing a representation or prediction.
+What is BERT?,BERT is a Transformer-based language model trained to learn contextual representations of text and widely used for NLP tasks.
+What is text preprocessing?,"Text preprocessing prepares raw text for an NLP task using operations such as normalization, tokenization, and optional filtering."
+What is semantic similarity?,"Semantic similarity estimates how close two pieces of text are in meaning, often using embeddings and a similarity metric."
+What is Computer Vision?,Computer vision enables computers to extract useful information from images and videos using image processing and machine learning techniques.
+What is image classification?,Image classification assigns an image to one or more predefined categories.
+What is object detection?,Object detection identifies objects in an image and usually predicts a class and bounding box for each detected object.
+What is image segmentation?,Image segmentation assigns labels to pixels or regions so that objects or semantic areas can be separated.
+What is semantic segmentation?,Semantic segmentation assigns a class label to each pixel without distinguishing between separate objects of the same class.
+What is instance segmentation?,Instance segmentation identifies individual object instances and assigns pixels to each instance.
+What is OpenCV?,"OpenCV is an open-source computer vision library used for image processing, video processing, feature extraction, and related tasks."
+What is image preprocessing?,"Image preprocessing prepares images for analysis or model input through operations such as resizing, normalization, cropping, or augmentation."
+What is image augmentation?,"Image augmentation creates varied training examples by applying transformations such as rotation, flipping, cropping, or scaling."
+What is convolution?,Convolution applies a small learnable filter across an input to detect local patterns such as edges and textures.
+What is pooling?,"Pooling reduces the spatial dimensions of feature maps while retaining useful information, often using maximum or average operations."
+What is a CNN?,A Convolutional Neural Network (CNN) is a neural-network architecture that learns spatial patterns using convolutional layers.
+What is transfer learning in computer vision?,Transfer learning in computer vision reuses a model trained on a large image dataset as a starting point for a related vision task.
+What is face detection?,"Face detection locates regions in an image that contain faces, typically using a trained detector."
+What is face recognition?,Face recognition compares facial representations to identify or verify a person's identity.
+What is image resizing?,Image resizing changes an image's width and height to meet processing or model-input requirements.
+What is pixel?,A pixel is a small individual element of a digital image that stores intensity or color information.
+What is RGB?,"RGB is a color representation using red, green, and blue channels."
+What is grayscale image?,A grayscale image represents intensity using shades from dark to light rather than separate color channels.
+What is IoU?,Intersection over Union (IoU) measures overlap between a predicted region and a ground-truth region by dividing their intersection area by their union area.
+What is SQL?,"SQL, or Structured Query Language, is used to create, query, update, and manage data in relational database systems."
+What is SELECT?,SELECT retrieves data from one or more tables or query results.
+What is WHERE?,WHERE filters rows according to a specified condition before the result is returned.
+What is GROUP BY?,GROUP BY groups rows with the same values in selected columns so aggregate calculations can be performed for each group.
+What is HAVING?,"HAVING filters groups produced by GROUP BY, commonly using aggregate conditions."
+What is ORDER BY?,ORDER BY sorts query results according to one or more columns.
+What is JOIN?,A JOIN combines rows from related tables using a specified relationship or matching condition.
+What is INNER JOIN?,INNER JOIN returns rows where the join condition matches in both joined tables.
+What is LEFT JOIN?,"LEFT JOIN returns all rows from the left table and matching rows from the right table, using nulls when no match exists."
+What is primary key?,A primary key uniquely identifies each row in a relational table and cannot contain duplicate key values.
+What is foreign key?,A foreign key is a column or set of columns that references a key in another table to represent a relationship.
+What is database index?,"A database index is a data structure that can speed up lookups and sorting for selected columns, at the cost of storage and write overhead."
+What is normalization in databases?,Database normalization organizes relational data to reduce unnecessary duplication and improve consistency.
+What is INSERT?,INSERT adds new rows to a database table.
+What is UPDATE?,UPDATE modifies existing rows that satisfy a specified condition.
+What is DELETE?,DELETE removes rows that satisfy a specified condition.
+What is DISTINCT?,DISTINCT removes duplicate rows from the selected result values.
+What is aggregate function?,"An aggregate function calculates a summary value over multiple rows, such as COUNT, SUM, AVG, MIN, or MAX."
+What is a SQL view?,A view is a stored query definition that presents data as a virtual table.
+What is a subquery?,A subquery is a query nested inside another SQL query and can provide intermediate results to the outer query.
+What is Generative AI?,"Generative AI refers to AI systems that can create new content such as text, images, audio, video, or code based on learned patterns."
+What is a large language model?,A large language model (LLM) is a neural language model trained on large amounts of text to understand and generate language.
+What is a prompt?,A prompt is an instruction or input provided to an AI model to guide the content or behavior of its response.
+What is prompt engineering?,Prompt engineering is the practice of designing and refining instructions and context to obtain more useful and reliable model outputs.
+What is RAG?,Retrieval-Augmented Generation (RAG) combines information retrieval with generation so a language model can use relevant external knowledge when producing an answer.
+What is an embedding model?,An embedding model converts content such as text into numerical vectors that capture useful semantic relationships.
+What is a vector database?,"A vector database stores and searches numerical embeddings, often supporting similarity search over text, images, or other data."
+What is hallucination in AI?,"An AI hallucination is a generated statement that may sound plausible but is unsupported, incorrect, or inconsistent with the available evidence."
+What is temperature in text generation?,Temperature is a generation setting that influences the randomness of token selection; higher values generally produce more varied outputs.
+What is context window?,A context window is the amount of input and output token context a model can consider within a request.
+What is fine tuning?,Fine-tuning adapts a pretrained model by continuing training on a task-specific or domain-specific dataset.
+What is zero shot learning?,Zero-shot learning performs a task without task-specific examples being provided in the prompt or training setup for that task.
+What is few shot prompting?,Few-shot prompting provides a small number of examples in the prompt to demonstrate the desired task or output pattern.
+What is an AI chatbot?,An AI chatbot is a conversational application that uses AI techniques to interpret user messages and generate or retrieve responses.
+What is grounding?,Grounding connects an AI response to trusted external information or evidence so that answers are based on specific available sources.
+What is retrieval?,"Retrieval is the process of finding relevant documents, passages, or records from a knowledge source for a user query."
+What is semantic retrieval?,Semantic retrieval finds information using vector representations and meaning-based similarity rather than only exact word matching.
+What is cosine similarity in RAG?,Cosine similarity can compare query and document embeddings to rank knowledge-base items by semantic closeness.
+What is an AI evaluation dataset?,An AI evaluation dataset is a collection of representative test inputs and expected behavior or answers used to measure system quality.
+What is responsible generative AI?,"Responsible generative AI emphasizes safe, reliable, transparent, privacy-aware, and appropriate use of generative models."
