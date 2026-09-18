@@ -2,9 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import sqlite3
-
+import re
 from datetime import datetime
-
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -48,13 +47,6 @@ st.markdown(
         margin-bottom: 20px;
     }
 
-    .info-box {
-        padding: 15px;
-        border-radius: 10px;
-        background-color: #f8f9fa;
-        margin-top: 10px;
-    }
-
     </style>
     """,
     unsafe_allow_html=True
@@ -62,120 +54,126 @@ st.markdown(
 
 
 # ============================================================
-# SQLITE DATABASE CONFIGURATION
+# SQLITE DATABASE
 # ============================================================
 
 DB_NAME = "chat_history.db"
 
 
-# ============================================================
-# SQLITE DATABASE CONNECTION
-# ============================================================
-
 def get_db_connection():
-
     return sqlite3.connect(
         DB_NAME,
         check_same_thread=False
     )
 
 
-# ============================================================
-# CREATE CHAT HISTORY TABLE
-# ============================================================
-
-def create_chat_table():
+def create_chat_tables():
 
     conn = get_db_connection()
-
     cursor = conn.cursor()
 
     cursor.execute(
         """
-        CREATE TABLE IF NOT EXISTS chat_history (
-
+        CREATE TABLE IF NOT EXISTS conversations (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-            question TEXT NOT NULL,
-
-            answer TEXT NOT NULL,
-
-            similarity_score REAL,
-
-            matched_question TEXT,
-
-            matched INTEGER,
-
-            timestamp TEXT NOT NULL
-
+            title TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
         )
         """
     )
-
-    conn.commit()
-
-    conn.close()
-
-
-# Create database and table automatically
-create_chat_table()
-
-
-# ============================================================
-# SAVE CHAT TO SQLITE
-# ============================================================
-
-def save_chat(
-    question,
-    answer,
-    similarity_score,
-    matched_question,
-    matched
-):
-
-    conn = get_db_connection()
-
-    cursor = conn.cursor()
 
     cursor.execute(
         """
-        INSERT INTO chat_history
-        (
-            question,
-            answer,
-            similarity_score,
-            matched_question,
-            matched,
-            timestamp
+        CREATE TABLE IF NOT EXISTS messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            conversation_id INTEGER NOT NULL,
+            question TEXT NOT NULL,
+            answer TEXT NOT NULL,
+            similarity_score REAL,
+            matched_question TEXT,
+            matched INTEGER,
+            timestamp TEXT NOT NULL,
+            FOREIGN KEY (conversation_id)
+                REFERENCES conversations(id)
+                ON DELETE CASCADE
         )
-        VALUES (?, ?, ?, ?, ?, ?)
-        """,
-        (
-            question,
-            answer,
-            similarity_score,
-            matched_question,
-            int(matched),
-            datetime.now().strftime(
-                "%Y-%m-%d %H:%M:%S"
-            )
-        )
+        """
     )
 
     conn.commit()
-
     conn.close()
 
 
+create_chat_tables()
+
+
 # ============================================================
-# LOAD CHAT HISTORY FROM SQLITE
+# CREATE NEW CONVERSATION
 # ============================================================
 
-def load_chat_history():
+def create_new_conversation(title="New Chat"):
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    now = datetime.now().strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+
+    cursor.execute(
+        """
+        INSERT INTO conversations
+        (title, created_at, updated_at)
+        VALUES (?, ?, ?)
+        """,
+        (title, now, now)
+    )
+
+    conversation_id = cursor.lastrowid
+
+    conn.commit()
+    conn.close()
+
+    return conversation_id
+
+
+# ============================================================
+# GET ALL CONVERSATIONS
+# ============================================================
+
+def get_conversations():
 
     conn = get_db_connection()
 
-    query = """
+    conversations = pd.read_sql_query(
+        """
+        SELECT
+            id,
+            title,
+            created_at,
+            updated_at
+        FROM conversations
+        ORDER BY updated_at DESC, id DESC
+        """,
+        conn
+    )
+
+    conn.close()
+
+    return conversations
+
+
+# ============================================================
+# LOAD ONE CONVERSATION
+# ============================================================
+
+def load_conversation(conversation_id):
+
+    conn = get_db_connection()
+
+    history_df = pd.read_sql_query(
+        """
         SELECT
             id,
             question,
@@ -184,13 +182,12 @@ def load_chat_history():
             matched_question,
             matched,
             timestamp
-        FROM chat_history
+        FROM messages
+        WHERE conversation_id = ?
         ORDER BY id ASC
-    """
-
-    history_df = pd.read_sql_query(
-        query,
-        conn
+        """,
+        conn,
+        params=(conversation_id,)
     )
 
     conn.close()
@@ -199,27 +196,145 @@ def load_chat_history():
 
 
 # ============================================================
-# CLEAR CHAT HISTORY FROM SQLITE
+# DELETE ONE CONVERSATION
 # ============================================================
 
-def clear_chat_history():
+def delete_conversation(conversation_id):
 
     conn = get_db_connection()
-
     cursor = conn.cursor()
 
     cursor.execute(
-        "DELETE FROM chat_history"
+        "DELETE FROM messages WHERE conversation_id = ?",
+        (conversation_id,)
     )
 
-    # Reset auto-increment ID
     cursor.execute(
-        "DELETE FROM sqlite_sequence "
-        "WHERE name='chat_history'"
+        "DELETE FROM conversations WHERE id = ?",
+        (conversation_id,)
     )
 
     conn.commit()
+    conn.close()
 
+
+# ============================================================
+# DELETE ALL CONVERSATIONS
+# ============================================================
+
+def delete_all_conversations():
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "DELETE FROM messages"
+    )
+
+    cursor.execute(
+        "DELETE FROM conversations"
+    )
+
+    conn.commit()
+    conn.close()
+
+
+# ============================================================
+# SAVE CHAT MESSAGE
+# ============================================================
+
+def save_chat(
+    conversation_id,
+    question,
+    answer,
+    similarity_score,
+    matched_question,
+    matched
+):
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    now = datetime.now().strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+
+    cursor.execute(
+        """
+        INSERT INTO messages
+        (
+            conversation_id,
+            question,
+            answer,
+            similarity_score,
+            matched_question,
+            matched,
+            timestamp
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            conversation_id,
+            question,
+            answer,
+            similarity_score,
+            matched_question,
+            int(matched),
+            now
+        )
+    )
+
+    # First question becomes chat title
+    current_title = cursor.execute(
+        """
+        SELECT title
+        FROM conversations
+        WHERE id = ?
+        """,
+        (conversation_id,)
+    ).fetchone()
+
+    if current_title and current_title[0] == "New Chat":
+
+        title = question.strip().replace(
+            "\n",
+            " "
+        )
+
+        if len(title) > 45:
+            title = title[:45].rstrip() + "..."
+
+        if not title:
+            title = "New Chat"
+
+        cursor.execute(
+            """
+            UPDATE conversations
+            SET title = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            (
+                title,
+                now,
+                conversation_id
+            )
+        )
+
+    else:
+
+        cursor.execute(
+            """
+            UPDATE conversations
+            SET updated_at = ?
+            WHERE id = ?
+            """,
+            (
+                now,
+                conversation_id
+            )
+        )
+
+    conn.commit()
     conn.close()
 
 
@@ -231,54 +346,43 @@ def clear_chat_history():
 def load_data():
 
     df = pd.read_csv(
-        "knowledge_base.csv"
+        "knowledge_datascience.csv"
     )
 
-    # Keep only required columns
     df = df[
         ["question", "answer"]
     ].copy()
 
-    # Convert text columns to string
     df["question"] = (
         df["question"]
         .astype(str)
-    )
-
-    df["answer"] = (
-        df["answer"]
-        .astype(str)
-    )
-
-    # Remove leading/trailing spaces
-    df["question"] = (
-        df["question"]
         .str.strip()
     )
 
     df["answer"] = (
         df["answer"]
+        .astype(str)
         .str.strip()
     )
 
-    # Replace multiple spaces with one space
-    df["question"] = df[
-        "question"
-    ].str.replace(
-        r"\s+",
-        " ",
-        regex=True
+    df["question"] = (
+        df["question"]
+        .str.replace(
+            r"\s+",
+            " ",
+            regex=True
+        )
     )
 
-    df["answer"] = df[
-        "answer"
-    ].str.replace(
-        r"\s+",
-        " ",
-        regex=True
+    df["answer"] = (
+        df["answer"]
+        .str.replace(
+            r"\s+",
+            " ",
+            regex=True
+        )
     )
 
-    # Remove duplicate question-answer pairs
     df = df.drop_duplicates(
         subset=[
             "question",
@@ -286,7 +390,6 @@ def load_data():
         ]
     ).reset_index(drop=True)
 
-    # Remove empty questions/answers
     df = df[
         (df["question"] != "") &
         (df["answer"] != "")
@@ -296,18 +399,16 @@ def load_data():
 
 
 # ============================================================
-# LOAD SENTENCE TRANSFORMER + CREATE EMBEDDINGS
+# LOAD MODEL + EMBEDDINGS
 # ============================================================
 
 @st.cache_resource
 def load_model_and_embeddings(df):
 
-    # Load pretrained Sentence Transformer
     model = SentenceTransformer(
         "all-MiniLM-L6-v2"
     )
 
-    # Generate embeddings for all questions
     question_embeddings = model.encode(
         df["question"].tolist(),
         normalize_embeddings=True,
@@ -318,7 +419,7 @@ def load_model_and_embeddings(df):
 
 
 # ============================================================
-# LOAD DATA AND MODEL
+# LOAD DATA + MODEL
 # ============================================================
 
 try:
@@ -339,15 +440,857 @@ except Exception as e:
         "❌ Unable to load the chatbot."
     )
 
-    st.error(
-        str(e)
-    )
+    st.error(str(e))
 
     st.stop()
 
 
 # ============================================================
-# CHATBOT FUNCTION
+# CONTEXT MEMORY
+# ============================================================
+
+CONTEXT_ENABLED = True
+
+
+# ============================================================
+# TOPIC KEYWORDS
+# ============================================================
+
+TOPIC_KEYWORDS = {
+
+    "Python": [
+        "python",
+        "py",
+        "python programming"
+    ],
+
+    "SQL": [
+        "sql",
+        "structured query language",
+        "database query"
+    ],
+
+    "Machine Learning": [
+        "machine learning",
+        "ml",
+        "machine-learning"
+    ],
+
+    "Deep Learning": [
+        "deep learning",
+        "dl",
+        "deep-learning"
+    ],
+
+    "Artificial Intelligence": [
+        "artificial intelligence",
+        "ai",
+        "artificial-intelligence"
+    ],
+
+    "Data Science": [
+        "data science",
+        "data scientist",
+        "data-science"
+    ],
+
+    "NLP": [
+        "nlp",
+        "natural language processing"
+    ],
+
+    "Computer Vision": [
+        "computer vision",
+        "cv"
+    ],
+
+    "Generative AI": [
+        "generative ai",
+        "gen ai",
+        "generative artificial intelligence"
+    ],
+
+    "Statistics": [
+        "statistics",
+        "statistical"
+    ],
+
+    "Transformer": [
+        "transformer",
+        "transformers",
+        "transformer model"
+    ],
+
+    "YOLO": [
+        "yolo",
+        "you only look once"
+    ],
+
+    "U-Net": [
+        "u-net",
+        "unet",
+        "u net"
+    ],
+
+    "OpenCV": [
+        "opencv",
+        "open cv"
+    ]
+}
+
+
+# ============================================================
+# FOLLOW-UP PHRASES
+# ============================================================
+
+FOLLOW_UP_PHRASES = [
+
+    "it",
+    "its",
+    "it's",
+    "they",
+    "them",
+    "their",
+    "this",
+    "that",
+    "these",
+    "those",
+    "above",
+    "previous",
+    "earlier",
+    "same",
+    "tell me more",
+    "explain more",
+    "explain further",
+    "more about it",
+    "what about it",
+    "how about it",
+    "why is it",
+    "how is it",
+    "how does it",
+    "why does it",
+    "what is its",
+    "what are its",
+    "what is their",
+    "what are their"
+]
+
+
+# ============================================================
+# FOLLOW-UP INTENTS
+# ============================================================
+
+FOLLOW_UP_INTENTS = {
+
+    "type": [
+        "type",
+        "types",
+        "kind",
+        "kinds"
+    ],
+
+    "data type": [
+        "data type",
+        "data types"
+    ],
+
+    "example": [
+        "example",
+        "examples"
+    ],
+
+    "application": [
+        "application",
+        "applications",
+        "use",
+        "uses",
+        "usage"
+    ],
+
+    "advantage": [
+        "advantage",
+        "advantages",
+        "benefit",
+        "benefits"
+    ],
+
+    "disadvantage": [
+        "disadvantage",
+        "disadvantages",
+        "limitation",
+        "limitations"
+    ],
+
+    "feature": [
+        "feature",
+        "features"
+    ],
+
+    "function": [
+        "function",
+        "functions"
+    ],
+
+    "method": [
+        "method",
+        "methods"
+    ],
+
+    "difference": [
+        "difference",
+        "differences",
+        "differentiate",
+        "compare"
+    ],
+
+    "working": [
+        "working",
+        "works",
+        "work"
+    ],
+
+    "architecture": [
+        "architecture",
+        "structure"
+    ],
+
+    "process": [
+        "process",
+        "steps",
+        "step"
+    ],
+
+    "definition": [
+        "meaning",
+        "definition",
+        "define",
+        "explain"
+    ]
+}
+
+
+# ============================================================
+# NORMALIZE TEXT
+# ============================================================
+
+def normalize_text(text):
+
+    text = str(text).lower()
+
+    text = re.sub(
+        r"[^a-z0-9\s\-]",
+        " ",
+        text
+    )
+
+    text = re.sub(
+        r"\s+",
+        " ",
+        text
+    )
+
+    return text.strip()
+
+
+# ============================================================
+# DETECT EXPLICIT TOPIC
+# ============================================================
+
+def detect_explicit_topic(question):
+
+    question_lower = normalize_text(
+        question
+    )
+
+    topic_items = []
+
+    for topic, keywords in TOPIC_KEYWORDS.items():
+
+        for keyword in keywords:
+
+            topic_items.append(
+                (
+                    len(keyword),
+                    topic,
+                    keyword
+                )
+            )
+
+    topic_items.sort(
+        reverse=True
+    )
+
+    for _, topic, keyword in topic_items:
+
+        if normalize_text(keyword) in question_lower:
+            return topic
+
+    return None
+
+
+# ============================================================
+# DETECT FOLLOW-UP
+# ============================================================
+
+def needs_context(question):
+
+    question_lower = normalize_text(
+        question
+    )
+
+    # Explicit topic = new topic
+    explicit_topic = detect_explicit_topic(
+        question_lower
+    )
+
+    if explicit_topic:
+        return False
+
+    padded_question = (
+        " "
+        + question_lower
+        + " "
+    )
+
+    for phrase in FOLLOW_UP_PHRASES:
+
+        if (
+            " " + phrase + " "
+        ) in padded_question:
+
+            return True
+
+    words = question_lower.split()
+
+    if len(words) <= 6:
+
+        short_patterns = [
+
+            "why",
+            "how",
+            "what about",
+            "and",
+            "then",
+            "which one",
+            "explain",
+            "describe",
+            "examples",
+            "example",
+            "types",
+            "type",
+            "applications",
+            "application",
+            "uses",
+            "use",
+            "features",
+            "feature",
+            "benefits",
+            "benefit",
+            "advantages",
+            "advantage",
+            "disadvantages",
+            "disadvantage",
+            "working",
+            "architecture",
+            "methods",
+            "method"
+        ]
+
+        for pattern in short_patterns:
+
+            if question_lower.startswith(
+                pattern
+            ):
+                return True
+
+    return False
+
+
+# ============================================================
+# DETECT FOLLOW-UP INTENT
+# ============================================================
+
+def detect_follow_up_intent(question):
+
+    question_lower = normalize_text(
+        question
+    )
+
+    if any(
+        phrase in question_lower
+        for phrase in FOLLOW_UP_INTENTS["data type"]
+    ):
+        return "data type"
+
+    for intent, keywords in FOLLOW_UP_INTENTS.items():
+
+        if intent == "data type":
+            continue
+
+        for keyword in keywords:
+
+            if keyword in question_lower:
+                return intent
+
+    return "general"
+
+
+# ============================================================
+# EXTRACT TOPIC
+# ============================================================
+
+def extract_topic_from_question(
+    matched_question
+):
+
+    if not matched_question:
+        return None
+
+    topic = detect_explicit_topic(
+        matched_question
+    )
+
+    if topic:
+        return topic
+
+    return None
+
+
+# ============================================================
+# GET ACTIVE CONTEXT
+# ============================================================
+
+def get_active_context():
+
+    # IMPORTANT:
+    # Only current session is used.
+    # Previous database chats are NOT used automatically.
+    # This prevents a New Chat from inheriting old context.
+
+    messages = st.session_state.get(
+        "messages",
+        []
+    )
+
+    if not messages:
+
+        return {
+            "active_topic": None,
+            "previous_question": "",
+            "previous_answer": "",
+            "matched_question": ""
+        }
+
+    # Search latest assistant response
+    for i in range(
+        len(messages) - 1,
+        -1,
+        -1
+    ):
+
+        if messages[i]["role"] == "assistant":
+
+            previous_answer = messages[i].get(
+                "content",
+                ""
+            )
+
+            matched_question = messages[i].get(
+                "matched_question",
+                ""
+            )
+
+            previous_question = ""
+
+            for j in range(
+                i - 1,
+                -1,
+                -1
+            ):
+
+                if messages[j]["role"] == "user":
+
+                    previous_question = (
+                        messages[j]["content"]
+                    )
+
+                    break
+
+            active_topic = (
+                extract_topic_from_question(
+                    matched_question
+                )
+            )
+
+            if not active_topic:
+
+                active_topic = (
+                    detect_explicit_topic(
+                        previous_question
+                    )
+                )
+
+            return {
+                "active_topic": active_topic,
+                "previous_question": previous_question,
+                "previous_answer": previous_answer,
+                "matched_question": matched_question
+            }
+
+    return {
+        "active_topic": None,
+        "previous_question": "",
+        "previous_answer": "",
+        "matched_question": ""
+    }
+
+
+# ============================================================
+# FIND BEST MATCH
+# ============================================================
+
+def find_best_match(
+    query,
+    candidate_indices=None
+):
+
+    query_embedding = model.encode(
+        query,
+        normalize_embeddings=True
+    )
+
+    if candidate_indices is None:
+
+        candidate_indices = np.arange(
+            len(df)
+        )
+
+    candidate_indices = np.array(
+        candidate_indices,
+        dtype=int
+    )
+
+    if len(candidate_indices) == 0:
+        return None
+
+    candidate_embeddings = (
+        question_embeddings[
+            candidate_indices
+        ]
+    )
+
+    similarity_scores = cosine_similarity(
+        [query_embedding],
+        candidate_embeddings
+    )[0]
+
+    best_position = int(
+        np.argmax(
+            similarity_scores
+        )
+    )
+
+    best_index = int(
+        candidate_indices[
+            best_position
+        ]
+    )
+
+    best_score = float(
+        similarity_scores[
+            best_position
+        ]
+    )
+
+    return {
+
+        "index": best_index,
+
+        "score": best_score,
+
+        "question": df.iloc[
+            best_index
+        ]["question"],
+
+        "answer": df.iloc[
+            best_index
+        ]["answer"]
+    }
+
+
+# ============================================================
+# GET TOPIC CANDIDATES
+# ============================================================
+
+def get_topic_candidates(
+    active_topic
+):
+
+    if not active_topic:
+        return []
+
+    topic_keywords = TOPIC_KEYWORDS.get(
+        active_topic,
+        [active_topic]
+    )
+
+    candidate_indices = []
+
+    for index, question in enumerate(
+        df["question"]
+    ):
+
+        question_lower = normalize_text(
+            question
+        )
+
+        for keyword in topic_keywords:
+
+            if normalize_text(keyword) in question_lower:
+
+                candidate_indices.append(
+                    index
+                )
+
+                break
+
+    return candidate_indices
+
+
+# ============================================================
+# FIND CONTEXTUAL MATCH
+# ============================================================
+
+def find_contextual_match(
+    active_topic,
+    current_question
+):
+
+    intent = detect_follow_up_intent(
+        current_question
+    )
+
+    # Build focused query
+    if intent in [
+        "type",
+        "data type"
+    ]:
+
+        search_query = (
+            f"{active_topic} data types "
+            f"{current_question}"
+        )
+
+    elif intent == "example":
+
+        search_query = (
+            f"{active_topic} examples "
+            f"{current_question}"
+        )
+
+    elif intent == "application":
+
+        search_query = (
+            f"{active_topic} applications uses "
+            f"{current_question}"
+        )
+
+    elif intent == "advantage":
+
+        search_query = (
+            f"{active_topic} advantages benefits "
+            f"{current_question}"
+        )
+
+    elif intent == "disadvantage":
+
+        search_query = (
+            f"{active_topic} disadvantages limitations "
+            f"{current_question}"
+        )
+
+    elif intent == "feature":
+
+        search_query = (
+            f"{active_topic} features "
+            f"{current_question}"
+        )
+
+    elif intent == "function":
+
+        search_query = (
+            f"{active_topic} functions "
+            f"{current_question}"
+        )
+
+    elif intent == "method":
+
+        search_query = (
+            f"{active_topic} methods "
+            f"{current_question}"
+        )
+
+    elif intent == "difference":
+
+        search_query = (
+            f"{active_topic} difference comparison "
+            f"{current_question}"
+        )
+
+    elif intent == "working":
+
+        search_query = (
+            f"{active_topic} working "
+            f"{current_question}"
+        )
+
+    elif intent == "architecture":
+
+        search_query = (
+            f"{active_topic} architecture structure "
+            f"{current_question}"
+        )
+
+    elif intent == "process":
+
+        search_query = (
+            f"{active_topic} process steps "
+            f"{current_question}"
+        )
+
+    else:
+
+        search_query = (
+            f"{active_topic} "
+            f"{current_question}"
+        )
+
+    # Search only inside current active topic
+    candidate_indices = get_topic_candidates(
+        active_topic
+    )
+
+    if candidate_indices:
+
+        match = find_best_match(
+            search_query,
+            candidate_indices
+        )
+
+    else:
+
+        match = find_best_match(
+            search_query
+        )
+
+    if match is not None:
+
+        match["search_query"] = search_query
+        match["intent"] = intent
+
+    return match
+
+
+# ============================================================
+# BUILD CONTEXT-AWARE QUERY
+# ============================================================
+
+def build_context_query(
+    current_question
+):
+
+    current_question = (
+        current_question.strip()
+    )
+
+    # Explicit topic = new topic
+    explicit_topic = detect_explicit_topic(
+        current_question
+    )
+
+    if explicit_topic:
+
+        return {
+
+            "used_context": False,
+
+            "active_topic": explicit_topic,
+
+            "query": current_question,
+
+            "intent": "new topic",
+
+            "context": []
+        }
+
+    # Get current conversation context
+    context = get_active_context()
+
+    active_topic = context[
+        "active_topic"
+    ]
+
+    # No current topic
+    if not active_topic:
+
+        return {
+
+            "used_context": False,
+
+            "active_topic": None,
+
+            "query": current_question,
+
+            "intent": "new topic",
+
+            "context": []
+        }
+
+    # Check follow-up
+    follow_up = needs_context(
+        current_question
+    )
+
+    if not follow_up:
+
+        return {
+
+            "used_context": False,
+
+            "active_topic": None,
+
+            "query": current_question,
+
+            "intent": "new topic",
+
+            "context": []
+        }
+
+    intent = detect_follow_up_intent(
+        current_question
+    )
+
+    focused_query = (
+        f"{active_topic} "
+        f"{current_question}"
+    )
+
+    return {
+
+        "used_context": True,
+
+        "active_topic": active_topic,
+
+        "query": focused_query,
+
+        "intent": intent,
+
+        "context": [active_topic]
+    }
+
+
+# ============================================================
+# GET ANSWER
 # ============================================================
 
 def get_answer(
@@ -355,280 +1298,281 @@ def get_answer(
     threshold=0.55
 ):
 
-    # Remove extra spaces
     user_question = (
         user_question.strip()
     )
 
-    # Handle empty input
+    # Empty input
     if not user_question:
 
         return {
-            "answer": (
-                "Please enter a question."
-            ),
+
+            "answer": "Please enter a question.",
+
             "matched_question": None,
+
             "score": 0.0,
-            "matched": False
+
+            "matched": False,
+
+            "context_used": False,
+
+            "context_questions": [],
+
+            "search_query": "",
+
+            "active_topic": None,
+
+            "intent": "none"
         }
 
-    # --------------------------------------------------------
-    # CONVERT USER QUESTION INTO EMBEDDING
-    # --------------------------------------------------------
-
-    query_embedding = model.encode(
-        user_question,
-        normalize_embeddings=True
+    # Build context
+    context_result = build_context_query(
+        user_question
     )
 
-    # --------------------------------------------------------
-    # CALCULATE COSINE SIMILARITY
-    # --------------------------------------------------------
+    context_used = context_result[
+        "used_context"
+    ]
 
-    similarity_scores = cosine_similarity(
-        [query_embedding],
-        question_embeddings
-    )[0]
+    active_topic = context_result[
+        "active_topic"
+    ]
 
-    # --------------------------------------------------------
-    # FIND HIGHEST SIMILARITY
-    # --------------------------------------------------------
+    # ========================================================
+    # NEW TOPIC
+    # ========================================================
 
-    best_index = int(
-        np.argmax(
-            similarity_scores
+    if not context_used:
+
+        direct_match = find_best_match(
+            user_question
         )
-    )
 
-    # Get highest similarity score
-    best_score = float(
-        similarity_scores[
-            best_index
+        if direct_match is None:
+
+            return {
+
+                "answer":
+                    "Sorry, I do not have information related to this question.",
+
+                "matched_question": None,
+
+                "score": 0.0,
+
+                "matched": False,
+
+                "context_used": False,
+
+                "context_questions": [],
+
+                "search_query": user_question,
+
+                "active_topic": active_topic,
+
+                "intent": "new topic"
+            }
+
+        best_score = direct_match["score"]
+        best_question = direct_match["question"]
+        best_answer = direct_match["answer"]
+
+        search_query = user_question
+        intent = "new topic"
+        context_questions = []
+
+    # ========================================================
+    # FOLLOW-UP QUESTION
+    # ========================================================
+
+    else:
+
+        contextual_match = find_contextual_match(
+            active_topic,
+            user_question
+        )
+
+        if contextual_match is None:
+
+            return {
+
+                "answer":
+                    "Sorry, I do not have information related to this question.",
+
+                "matched_question": None,
+
+                "score": 0.0,
+
+                "matched": False,
+
+                "context_used": True,
+
+                "context_questions": [active_topic],
+
+                "search_query": user_question,
+
+                "active_topic": active_topic,
+
+                "intent": detect_follow_up_intent(
+                    user_question
+                )
+            }
+
+        best_score = contextual_match["score"]
+        best_question = contextual_match["question"]
+        best_answer = contextual_match["answer"]
+
+        search_query = contextual_match[
+            "search_query"
         ]
-    )
 
-    # --------------------------------------------------------
-    # GET MATCHING QUESTION
-    # --------------------------------------------------------
+        intent = contextual_match[
+            "intent"
+        ]
 
-    best_question = df.iloc[
-        best_index
-    ]["question"]
+        context_questions = [
+            active_topic
+        ]
 
-    # --------------------------------------------------------
-    # GET CORRESPONDING ANSWER
-    # --------------------------------------------------------
-
-    best_answer = df.iloc[
-        best_index
-    ]["answer"]
-
-    # --------------------------------------------------------
-    # CHECK SIMILARITY THRESHOLD
-    # --------------------------------------------------------
+    # ========================================================
+    # SIMILARITY THRESHOLD
+    # ========================================================
 
     if best_score >= threshold:
 
         return {
+
             "answer": best_answer,
+
             "matched_question": best_question,
+
             "score": best_score,
-            "matched": True
+
+            "matched": True,
+
+            "context_used": context_used,
+
+            "context_questions": context_questions,
+
+            "search_query": search_query,
+
+            "active_topic": active_topic,
+
+            "intent": intent
         }
 
-    else:
+    # ========================================================
+    # EXACT FALLBACK
+    # ========================================================
 
-        return {
-            "answer": (
-                "Sorry, I couldn't find a relevant "
-                "answer in my educational knowledge base. "
-                "Please try asking about AI, Machine "
-                "Learning, Deep Learning, Python, Data "
-                "Science, Statistics, NLP, Computer "
-                "Vision, SQL, or Generative AI."
-            ),
-            "matched_question": best_question,
-            "score": best_score,
-            "matched": False
-        }
+    return {
+
+        "answer":
+            "Sorry, I do not have information related to this question.",
+
+        "matched_question": best_question,
+
+        "score": best_score,
+
+        "matched": False,
+
+        "context_used": context_used,
+
+        "context_questions": context_questions,
+
+        "search_query": search_query,
+
+        "active_topic": active_topic,
+
+        "intent": intent
+    }
 
 
 # ============================================================
 # SESSION STATE
 # ============================================================
 
-if "messages" not in st.session_state:
+if "conversation_id" not in st.session_state:
 
-    # Load permanent history from SQLite
-    history_df = load_chat_history()
+    st.session_state.conversation_id = (
+        create_new_conversation()
+    )
+
+
+if "messages" not in st.session_state:
 
     st.session_state.messages = []
 
-    # --------------------------------------------------------
-    # LOAD OLD CHAT HISTORY
-    # --------------------------------------------------------
 
-    if not history_df.empty:
+# ============================================================
+# LOAD SELECTED CHAT
+# ============================================================
 
-        for _, row in history_df.iterrows():
+def load_selected_conversation(
+    conversation_id
+):
 
-            # User message
-            st.session_state.messages.append(
-                {
-                    "role": "user",
-                    "content": row["question"]
-                }
-            )
+    history_df = load_conversation(
+        conversation_id
+    )
 
-            # Assistant message
-            st.session_state.messages.append(
-                {
-                    "role": "assistant",
-                    "content": row["answer"],
-                    "score": row[
-                        "similarity_score"
-                    ],
-                    "matched": bool(
-                        row["matched"]
-                    ),
-                    "matched_question": row[
-                        "matched_question"
-                    ]
-                }
-            )
+    messages = []
+
+    for _, row in history_df.iterrows():
+
+        messages.append(
+            {
+                "role": "user",
+                "content": row["question"]
+            }
+        )
+
+        messages.append(
+            {
+                "role": "assistant",
+                "content": row["answer"],
+                "score": row["similarity_score"],
+                "matched": bool(
+                    row["matched"]
+                ),
+                "matched_question":
+                    row["matched_question"]
+            }
+        )
+
+    st.session_state.conversation_id = (
+        conversation_id
+    )
+
+    st.session_state.messages = messages
+
+
+# ============================================================
+# START NEW CHAT
+# ============================================================
+
+def start_new_chat():
+
+    st.session_state.conversation_id = (
+        create_new_conversation()
+    )
+
+    st.session_state.messages = []
 
 
 # ============================================================
 # HEADER
 # ============================================================
 
-header_col, history_col = st.columns(
-    [7, 2]
+st.markdown(
+    '<div class="main-title">🤖 EduBot AI</div>',
+    unsafe_allow_html=True
 )
 
-
-# ============================================================
-# TITLE
-# ============================================================
-
-with header_col:
-
-    st.markdown(
-        '<div class="main-title">'
-        '🤖 EduBot AI'
-        '</div>',
-        unsafe_allow_html=True
-    )
-
-    st.markdown(
-        '<div class="subtitle">'
-        'Your AI-powered educational assistant'
-        '</div>',
-        unsafe_allow_html=True
-    )
-
-
-# ============================================================
-# CHAT HISTORY POPUP BUTTON
-# ============================================================
-
-with history_col:
-
-    with st.popover(
-        "📜 Chat History",
-        use_container_width=True
-    ):
-
-        st.subheader(
-            "📜 Previous Conversations"
-        )
-
-        # Load latest history directly from SQLite
-        history_df = load_chat_history()
-
-        # ----------------------------------------------------
-        # CHECK HISTORY
-        # ----------------------------------------------------
-
-        if history_df.empty:
-
-            st.info(
-                "No previous conversations found."
-            )
-
-        else:
-
-            # Create display dataframe
-            display_df = history_df.copy()
-
-            # Rename columns
-            display_df = display_df.rename(
-                columns={
-                    "id": "ID",
-                    "question": "Question",
-                    "answer": "Answer",
-                    "similarity_score":
-                        "Similarity",
-                    "matched_question":
-                        "Matched Question",
-                    "matched":
-                        "Matched",
-                    "timestamp":
-                        "Date & Time"
-                }
-            )
-
-            # Format similarity score
-            display_df[
-                "Similarity"
-            ] = display_df[
-                "Similarity"
-            ].apply(
-                lambda x:
-                f"{x:.2%}"
-                if pd.notna(x)
-                else "N/A"
-            )
-
-            # Format matched value
-            display_df[
-                "Matched"
-            ] = display_df[
-                "Matched"
-            ].apply(
-                lambda x:
-                "✅ Yes"
-                if x == 1
-                else "❌ No"
-            )
-
-            # Show newest first
-            display_df = display_df.iloc[
-                ::-1
-            ]
-
-            # ------------------------------------------------
-            # DISPLAY TABLE
-            # ------------------------------------------------
-
-            st.dataframe(
-                display_df[
-                    [
-                        "ID",
-                        "Question",
-                        "Answer",
-                        "Similarity",
-                        "Date & Time"
-                    ]
-                ],
-                use_container_width=True,
-                hide_index=True
-            )
-
-            st.caption(
-                f"📊 Total conversations: "
-                f"{len(history_df)}"
-            )
+st.markdown(
+    '<div class="subtitle">Your AI-powered educational assistant</div>',
+    unsafe_allow_html=True
+)
 
 
 # ============================================================
@@ -650,55 +1594,31 @@ with st.sidebar:
     st.divider()
 
 
-    # ========================================================
-    # KNOWLEDGE BASE INFORMATION
-    # ========================================================
+    # --------------------------------------------------------
+    # AI MODEL
+    # --------------------------------------------------------
 
-    st.subheader(
-        "📚 Knowledge Base"
-    )
+    st.subheader("🧠 AI Model")
 
-    st.metric(
-        "Questions",
-        len(df)
+    st.caption(
+        "Sentence Transformer: all-MiniLM-L6-v2"
     )
 
     st.caption(
-        "Model: all-MiniLM-L6-v2"
-    )
-
-    st.divider()
-
-
-    # ========================================================
-    # DATABASE INFORMATION
-    # ========================================================
-
-    st.subheader(
-        "💾 Chat Database"
-    )
-
-    history_df = load_chat_history()
-
-    st.metric(
-        "Saved Conversations",
-        len(history_df)
+        "Context Memory: Enabled"
     )
 
     st.caption(
-        "Storage: SQLite"
+        "Active Topic Tracking: Enabled"
     )
 
-    st.divider()
-
-
-    # ========================================================
+    # --------------------------------------------------------
     # SUGGESTED QUESTIONS
-    # ========================================================
+    # --------------------------------------------------------
 
-    st.subheader(
-        "💡 Try These Questions"
-    )
+    st.divider()
+
+    st.subheader("💡 Suggested Questions")
 
     suggested_questions = [
 
@@ -723,6 +1643,7 @@ with st.sidebar:
 
         if st.button(
             question,
+            key=f"suggest_{question}",
             use_container_width=True
         ):
 
@@ -730,13 +1651,13 @@ with st.sidebar:
                 question
             )
 
+            st.rerun()
+
+    # --------------------------------------------------------
+    # SIMILARITY THRESHOLD
+    # --------------------------------------------------------
 
     st.divider()
-
-
-    # ========================================================
-    # SIMILARITY THRESHOLD
-    # ========================================================
 
     st.subheader(
         "🎯 Similarity Threshold"
@@ -744,61 +1665,162 @@ with st.sidebar:
 
     threshold = st.slider(
         "Threshold",
-
         min_value=0.30,
-
         max_value=0.90,
-
         value=0.55,
-
-        step=0.05,
-
-        help=(
-            "Higher values make the chatbot "
-            "more strict when deciding whether "
-            "a question is relevant."
-        )
+        step=0.05
     )
 
+    # --------------------------------------------------------
+    # CHAT HISTORY AT LAST
+    # --------------------------------------------------------
 
     st.divider()
 
+    st.subheader("📚 Chat History")
 
-    # ========================================================
-    # CLEAR CHAT HISTORY
-    # ========================================================
+    conversations_df = get_conversations()
 
-    if st.button(
-        "🗑️ Clear Chat History",
-        use_container_width=True
-    ):
+    if conversations_df.empty:
 
-        # Delete history from SQLite
-        clear_chat_history()
+        st.caption(
+            "No saved conversations yet."
+        )
 
-        # Clear session history
-        st.session_state.messages = []
+    else:
 
-        # Remove selected question if present
-        if (
-            "selected_question"
-            in st.session_state
+        for _, conversation in conversations_df.iterrows():
+
+            conversation_id = int(
+                conversation["id"]
+            )
+
+            title = str(
+                conversation["title"]
+            )
+
+            row_col, delete_col = st.columns(
+                [6, 1],
+                gap="small"
+            )
+
+            # Clickable history
+            with row_col:
+
+                is_current = (
+                    conversation_id
+                    == st.session_state.conversation_id
+                )
+
+                if is_current:
+
+                    button_label = (
+                        f"🟢 {title}"
+                    )
+
+                else:
+
+                    button_label = (
+                        f"💬 {title}"
+                    )
+
+                if st.button(
+                    button_label,
+                    key=f"open_chat_{conversation_id}",
+                    use_container_width=True
+                ):
+
+                    load_selected_conversation(
+                        conversation_id
+                    )
+
+                    st.rerun()
+
+            # Individual delete
+            with delete_col:
+
+                if st.button(
+                    "🗑️",
+                    key=f"delete_chat_{conversation_id}",
+                    help="Delete this chat"
+                ):
+
+                    delete_conversation(
+                        conversation_id
+                    )
+
+                    if (
+                        conversation_id
+                        == st.session_state.conversation_id
+                    ):
+
+                        start_new_chat()
+
+                    st.rerun()
+
+    # --------------------------------------------------------
+    # DELETE ALL
+    # --------------------------------------------------------
+
+    if not conversations_df.empty:
+
+        st.divider()
+
+        if st.button(
+            "🗑️ Delete Chat History",
+            use_container_width=True
         ):
 
-            del st.session_state[
-                "selected_question"
-            ]
+            delete_all_conversations()
 
-        st.rerun()
+            start_new_chat()
+
+            st.rerun()
+
+    # --------------------------------------------------------
+    # HISTORY DATABASE SECTION (NEWLY ADDED)
+    # --------------------------------------------------------
+    st.divider()
+    
+    if st.button("🗄️ History Database", use_container_width=True):
+        st.session_state.show_history_db = not st.session_state.get("show_history_db", False)
+
+    if st.session_state.get("show_history_db", False):
+        st.caption("### 🗄️ Saved Database Logs")
+        
+        conn = get_db_connection()
+        logs_df = pd.read_sql_query(
+            """
+            SELECT 
+                conversation_id AS ID,
+                question AS Question,
+                answer AS Answer,
+                similarity_score AS Similarity,
+                timestamp AS [Date & Time]
+            FROM messages
+            ORDER BY timestamp DESC
+            """, 
+            conn
+        )
+        conn.close()
+        
+        if logs_df.empty:
+            st.info("No logs saved in database yet.")
+        else:
+            logs_df["Similarity"] = logs_df["Similarity"].apply(lambda x: f"{x * 100:.2%}" if isinstance(x, (int, float)) else "0.00%")
+            
+            st.dataframe(
+                logs_df,
+                use_container_width=True,
+                hide_index=True
+            )
 
 
 # ============================================================
-# WELCOME BOX
+# WELCOME SCREEN
 # ============================================================
 
-if len(
-    st.session_state.messages
-) == 0:
+if len(st.session_state.messages) == 0:
 
     st.markdown(
         """
@@ -806,28 +1828,23 @@ if len(
 
         ### 🎓 Welcome to EduBot AI!
 
-        Ask me anything related to the topics in my
-        educational knowledge base.
+        Ask questions related to the educational knowledge base.
 
         **Example:**
 
-        > Can you explain machine learning?
+        > Can you explain Machine Learning?
 
-        I'll find the most semantically similar question
-        and return its corresponding answer.
+        I will find the most semantically similar question and return its corresponding answer.
 
-        **Topics include:**
+        **Topics Include**
 
-        - Artificial Intelligence
-        - Machine Learning
-        - Deep Learning
-        - Python
-        - Data Science
-        - Statistics
-        - NLP
-        - Computer Vision
-        - SQL
-        - Generative AI
+        <div>Artificial Intelligence</div>
+        <div>Machine Learning</div>
+        <div>Deep Learning</div>
+        <div>Python</div>
+        <div>NLP</div>
+        <div>Computer Vision</div>
+        <div>Generative AI</div>
 
         </div>
         """,
@@ -836,7 +1853,7 @@ if len(
 
 
 # ============================================================
-# DISPLAY CHAT HISTORY
+# DISPLAY CURRENT CHAT
 # ============================================================
 
 for message in st.session_state.messages:
@@ -848,10 +1865,6 @@ for message in st.session_state.messages:
         st.markdown(
             message["content"]
         )
-
-        # ----------------------------------------------------
-        # SHOW RETRIEVAL INFORMATION
-        # ----------------------------------------------------
 
         if (
             message["role"] == "assistant"
@@ -880,7 +1893,7 @@ for message in st.session_state.messages:
 
 
 # ============================================================
-# USER INPUT
+# CHAT INPUT
 # ============================================================
 
 user_question = st.chat_input(
@@ -911,13 +1924,15 @@ if (
 
 if user_question:
 
-    # Remove unnecessary spaces
     user_question = (
         user_question.strip()
     )
 
+    if not user_question:
+        st.stop()
+
     # --------------------------------------------------------
-    # ADD USER MESSAGE TO SESSION STATE
+    # ADD USER MESSAGE
     # --------------------------------------------------------
 
     st.session_state.messages.append(
@@ -927,29 +1942,20 @@ if user_question:
         }
     )
 
-    # --------------------------------------------------------
-    # DISPLAY USER MESSAGE
-    # --------------------------------------------------------
-
-    with st.chat_message(
-        "user"
-    ):
+    with st.chat_message("user"):
 
         st.markdown(
             user_question
         )
 
-
     # --------------------------------------------------------
-    # GENERATE BOT RESPONSE
+    # GENERATE ANSWER
     # --------------------------------------------------------
 
-    with st.chat_message(
-        "assistant"
-    ):
+    with st.chat_message("assistant"):
 
         with st.spinner(
-            "🔍 Searching the knowledge base..."
+            "🧠 EduBot is thinking..."
         ):
 
             result = get_answer(
@@ -957,19 +1963,9 @@ if user_question:
                 threshold
             )
 
-
-        # ----------------------------------------------------
-        # DISPLAY ANSWER
-        # ----------------------------------------------------
-
         st.markdown(
             result["answer"]
         )
-
-
-        # ----------------------------------------------------
-        # DISPLAY SIMILARITY SCORE
-        # ----------------------------------------------------
 
         if result["matched"]:
 
@@ -986,7 +1982,6 @@ if user_question:
                 f"Fallback response"
             )
 
-
         # ----------------------------------------------------
         # RETRIEVAL DETAILS
         # ----------------------------------------------------
@@ -995,18 +1990,51 @@ if user_question:
             "🔎 View Retrieval Details"
         ):
 
-            if result[
-                "matched_question"
-            ]:
+            if result["context_used"]:
+
+                st.write(
+                    "### 🧠 Context Memory"
+                )
+
+                st.write(
+                    "EduBot detected this as a "
+                    "follow-up question."
+                )
+
+                st.write(
+                    f"**Active Topic:** "
+                    f"{result['active_topic']}"
+                )
+
+                st.write(
+                    f"**Follow-up Intent:** "
+                    f"{result['intent']}"
+                )
+
+                st.write(
+                    f"**Focused Search Query:** "
+                    f"{result['search_query']}"
+                )
+
+            else:
+
+                st.write(
+                    "### 🆕 New Topic"
+                )
+
+                st.write(
+                    "EduBot treated this as a "
+                    "new topic."
+                )
+
+            if result["matched_question"]:
 
                 st.write(
                     "**Best Matching Question:**"
                 )
 
                 st.write(
-                    result[
-                        "matched_question"
-                    ]
+                    result["matched_question"]
                 )
 
             st.write(
@@ -1019,34 +2047,46 @@ if user_question:
                 f"{threshold:.2f}"
             )
 
-
     # --------------------------------------------------------
-    # SAVE QUESTION + ANSWER TO SQLITE
+    # SAVE TO SQLITE
     # --------------------------------------------------------
 
     save_chat(
+
+        conversation_id=(
+            st.session_state.conversation_id
+        ),
+
         question=user_question,
+
         answer=result["answer"],
+
         similarity_score=result["score"],
+
         matched_question=(
             result["matched_question"]
         ),
+
         matched=result["matched"]
     )
 
-
     # --------------------------------------------------------
-    # ADD BOT RESPONSE TO SESSION STATE
+    # ADD ASSISTANT MESSAGE TO SESSION
     # --------------------------------------------------------
 
     st.session_state.messages.append(
+
         {
+
             "role": "assistant",
+
             "content": result["answer"],
+
             "score": result["score"],
+
             "matched": result["matched"],
-            "matched_question": (
+
+            "matched_question":
                 result["matched_question"]
-            )
         }
     )
