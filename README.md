@@ -2,7 +2,7 @@
 
 ## 1. Introduction
 
-The AI-Powered Educational Chatbot is a retrieval-based educational question-answering system. It reads a CSV knowledge base containing questions and trusted answers, converts the stored questions and the user's query into semantic embeddings, and retrieves the most relevant answer.
+The AI-Powered Educational Chatbot is a retrieval-based educational question-answering system. It reads a CSV knowledge base containing questions and trusted answers, converts the stored questions and the user's query into semantic embeddings, context memory and retrieves the most relevant answer.
 
 ## 2. Problem statement
 
@@ -12,6 +12,7 @@ Users should be able to ask educational questions in natural language. The syste
 
 - Build a CSV-driven question-answering system.
 - Use semantic retrieval instead of exact keyword matching.
+- Provide understanding of follow-up using context memory.
 - Provide a fallback when relevance is insufficient.
 - Provide chat history and suggested questions.
 - Provide a clean interface suitable for future web integration.
@@ -28,7 +29,7 @@ Users should be able to ask educational questions in natural language. The syste
 
 ## 5. Dataset
 
-The starter dataset has 300 question-answer pairs covering:
+The dataset has question-answer pairs covering:
 - Artificial Intelligence
 - Machine Learning
 - Deep Learning
@@ -40,7 +41,7 @@ The starter dataset has 300 question-answer pairs covering:
 - SQL
 - Generative AI
 
-Recommended final size: 250-300 curated records.
+Recommended final size: 10000+ curated records.
 
 ## 6. Methodology
 
@@ -59,13 +60,16 @@ The same model converts the user's question into an embedding.
 ### Step 5: Similarity calculation
 The embeddings are normalized. Their dot product is therefore equivalent to cosine similarity.
 
-### Step 6: Retrieval
+### Step 6: Context Memory
+Context Memory analyze previous follow-up question and provide answer of next question.
+
+### Step 7: Retrieval
 The highest-scoring knowledge-base question is selected.
 
-### Step 7: Threshold
+### Step 8: Threshold
 If the similarity is at least the configured threshold, its answer is returned. Otherwise, the chatbot returns the fallback response.
 
-## 7. Why Sentence Transformers?
+## 9. Why Sentence Transformers?
 
 Exact string matching would fail when users phrase the same idea differently. Sentence embeddings allow semantically similar questions to be compared in vector space.
 
@@ -79,7 +83,11 @@ and
 
 may have similar embeddings even though the words are not identical.
 
-## 8. User interface
+What are its type?
+
+using context memory provide relevant answer.
+
+## 10. User interface
 
 The Streamlit interface provides:
 - User and assistant message bubbles.
@@ -89,7 +97,7 @@ The Streamlit interface provides:
 - Retrieval confidence.
 - Matched knowledge-base question.
 
-## 9. Testing strategy
+## 11. Testing strategy
 
 ### Functional tests
 Check exact questions, semantic variations, empty input, and fallback behavior.
@@ -106,14 +114,14 @@ Prepare a test set containing:
 ### Threshold tuning
 Try several thresholds, for example 0.50, 0.55, 0.60, and 0.65. Select a value that keeps relevant answers while rejecting unrelated questions. Do not select the threshold only because it gives a good result on one example.
 
-## 10. Limitations
+## 12. Limitations
 
 - The system can only answer questions represented by the knowledge base.
 - A similarity score is not a proof that an answer is factually correct.
 - The quality of retrieval depends on the quality and coverage of the CSV.
 - The starter system does not generate new answers with an LLM.
 
-## 11. Future scope
+## 13. Future scope
 
 - Expand the knowledge base.
 - Add persistent storage.
@@ -123,6 +131,6 @@ Try several thresholds, for example 0.50, 0.55, 0.60, and 0.65. Select a value t
 - Add multilingual support.
 - Add monitoring and retrieval evaluation.
 
-## 12. Conclusion
+## 14. Conclusion
 
-The project demonstrates a practical semantic-search chatbot using a CSV knowledge base, Sentence Transformers, similarity-based retrieval, thresholded fallback behavior, and a Streamlit interface.
+The project demonstrates a practical semantic-search chatbot using a CSV knowledge base, Sentence Transformers, similarity-based retrieval, context memory follow-up question, thresholded fallback behavior, and a Streamlit interface.
