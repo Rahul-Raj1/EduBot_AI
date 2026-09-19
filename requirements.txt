@@ -4,3 +4,7 @@ numpy>=1.26,<3
 sentence-transformers>=3.0
 torch>=2.0
 pytest>=8.0
+sqlite3
+datetime
+re
+sklearn
