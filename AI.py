@@ -458,213 +458,88 @@ CONTEXT_ENABLED = True
 
 TOPIC_KEYWORDS = {
 
-    "Python": [
-        "python",
-        "py",
-        "python programming"
-    ],
-
-    "SQL": [
-        "sql",
-        "structured query language",
-        "database query"
-    ],
-
-    "Machine Learning": [
-        "machine learning",
-        "ml",
-        "machine-learning"
-    ],
-
-    "Deep Learning": [
-        "deep learning",
-        "dl",
-        "deep-learning"
-    ],
-
-    "Artificial Intelligence": [
-        "artificial intelligence",
-        "ai",
-        "artificial-intelligence"
-    ],
-
-    "Data Science": [
-        "data science",
-        "data scientist",
-        "data-science"
-    ],
-
-    "NLP": [
-        "nlp",
-        "natural language processing"
-    ],
-
-    "Computer Vision": [
-        "computer vision",
-        "cv"
-    ],
-
-    "Generative AI": [
-        "generative ai",
-        "gen ai",
-        "generative artificial intelligence"
-    ],
-
-    "Statistics": [
-        "statistics",
-        "statistical"
-    ],
-
-    "Transformer": [
-        "transformer",
-        "transformers",
-        "transformer model"
-    ],
-
-    "YOLO": [
-        "yolo",
-        "you only look once"
-    ],
-
-    "U-Net": [
-        "u-net",
-        "unet",
-        "u net"
-    ],
-
-    "OpenCV": [
-        "opencv",
-        "open cv"
-    ]
+    "Python": ["python", "py", "python programming"],
+    "SQL": ["sql", "structured query language", "database query"],
+    "Machine Learning": ["machine learning", "ml", "machine-learning"],
+    "Deep Learning": ["deep learning", "dl", "deep-learning"],
+    "Artificial Intelligence": ["artificial intelligence", "ai", "artificial-intelligence"],
+    "Data Science": ["data science", "data scientist", "data-science"],
+    "NLP": ["nlp", "natural language processing"],
+    "Computer Vision": ["computer vision", "cv"],
+    "Generative AI": ["generative ai", "gen ai", "generative artificial intelligence"],
+    "Statistics": ["statistics", "statistical"],
+    "Transformer": ["transformer", "transformers", "transformer model"],
+    "YOLO": ["yolo", "you only look once"],
+    "U-Net": ["u-net", "unet", "u net"],
+    "OpenCV": ["opencv", "open cv"]
 }
-
-
-# ============================================================
-# FOLLOW-UP PHRASES
-# ============================================================
-
-FOLLOW_UP_PHRASES = [
-
-    "it",
-    "its",
-    "it's",
-    "they",
-    "them",
-    "their",
-    "this",
-    "that",
-    "these",
-    "those",
-    "above",
-    "previous",
-    "earlier",
-    "same",
-    "tell me more",
-    "explain more",
-    "explain further",
-    "more about it",
-    "what about it",
-    "how about it",
-    "why is it",
-    "how is it",
-    "how does it",
-    "why does it",
-    "what is its",
-    "what are its",
-    "what is their",
-    "what are their"
-]
 
 
 # ============================================================
 # FOLLOW-UP INTENTS
 # ============================================================
 
-FOLLOW_UP_INTENTS = {
+FOLLOW_UP_INTENT_KEYWORDS = {
 
-    "type": [
-        "type",
-        "types",
-        "kind",
-        "kinds"
+    "formula": [
+        "formula", "formulas", "equation", "equations",
+        "calculation", "calculate"
     ],
 
-    "data type": [
-        "data type",
-        "data types"
+    "algorithm": [
+        "algorithm", "algorithms"
+    ],
+
+    "type": [
+        "type", "types", "kind", "kinds", "data type", "data types"
     ],
 
     "example": [
-        "example",
-        "examples"
+        "example", "examples", "sample", "samples"
     ],
 
     "application": [
-        "application",
-        "applications",
-        "use",
-        "uses",
-        "usage"
+        "application", "applications", "use", "uses", "usage"
     ],
 
     "advantage": [
-        "advantage",
-        "advantages",
-        "benefit",
-        "benefits"
+        "advantage", "advantages", "benefit", "benefits"
     ],
 
     "disadvantage": [
-        "disadvantage",
-        "disadvantages",
-        "limitation",
-        "limitations"
+        "disadvantage", "disadvantages", "limitation", "limitations"
     ],
 
     "feature": [
-        "feature",
-        "features"
+        "feature", "features"
     ],
 
     "function": [
-        "function",
-        "functions"
+        "function", "functions"
     ],
 
     "method": [
-        "method",
-        "methods"
+        "method", "methods"
     ],
 
     "difference": [
-        "difference",
-        "differences",
-        "differentiate",
-        "compare"
+        "difference", "differences", "differentiate", "compare", "comparison"
     ],
 
     "working": [
-        "working",
-        "works",
-        "work"
+        "working", "works", "work"
     ],
 
     "architecture": [
-        "architecture",
-        "structure"
+        "architecture", "structure"
     ],
 
     "process": [
-        "process",
-        "steps",
-        "step"
+        "process", "steps", "step"
     ],
 
     "definition": [
-        "meaning",
-        "definition",
-        "define",
-        "explain"
+        "meaning", "definition", "define", "explain"
     ]
 }
 
@@ -693,179 +568,105 @@ def normalize_text(text):
 
 
 # ============================================================
-# DETECT EXPLICIT TOPIC
+# DETECT KNOWN TOPIC
 # ============================================================
 
 def detect_explicit_topic(question):
 
-    question_lower = normalize_text(
-        question
-    )
+    question_lower = normalize_text(question)
 
-    topic_items = []
+    matches = []
 
     for topic, keywords in TOPIC_KEYWORDS.items():
 
         for keyword in keywords:
 
-            topic_items.append(
-                (
-                    len(keyword),
-                    topic,
-                    keyword
-                )
-            )
+            keyword = normalize_text(keyword)
 
-    topic_items.sort(
-        reverse=True
-    )
-
-    for _, topic, keyword in topic_items:
-
-        if normalize_text(keyword) in question_lower:
-            return topic
-
-    return None
-
-
-# ============================================================
-# DETECT FOLLOW-UP
-# ============================================================
-
-def needs_context(question):
-
-    question_lower = normalize_text(
-        question
-    )
-
-    # Explicit topic = new topic
-    explicit_topic = detect_explicit_topic(
-        question_lower
-    )
-
-    if explicit_topic:
-        return False
-
-    padded_question = (
-        " "
-        + question_lower
-        + " "
-    )
-
-    for phrase in FOLLOW_UP_PHRASES:
-
-        if (
-            " " + phrase + " "
-        ) in padded_question:
-
-            return True
-
-    words = question_lower.split()
-
-    if len(words) <= 6:
-
-        short_patterns = [
-
-            "why",
-            "how",
-            "what about",
-            "and",
-            "then",
-            "which one",
-            "explain",
-            "describe",
-            "examples",
-            "example",
-            "types",
-            "type",
-            "applications",
-            "application",
-            "uses",
-            "use",
-            "features",
-            "feature",
-            "benefits",
-            "benefit",
-            "advantages",
-            "advantage",
-            "disadvantages",
-            "disadvantage",
-            "working",
-            "architecture",
-            "methods",
-            "method"
-        ]
-
-        for pattern in short_patterns:
-
-            if question_lower.startswith(
-                pattern
+            if re.search(
+                r"\b" + re.escape(keyword) + r"\b",
+                question_lower
             ):
-                return True
 
-    return False
+                matches.append(
+                    (len(keyword), topic)
+                )
 
-
-# ============================================================
-# DETECT FOLLOW-UP INTENT
-# ============================================================
-
-def detect_follow_up_intent(question):
-
-    question_lower = normalize_text(
-        question
-    )
-
-    if any(
-        phrase in question_lower
-        for phrase in FOLLOW_UP_INTENTS["data type"]
-    ):
-        return "data type"
-
-    for intent, keywords in FOLLOW_UP_INTENTS.items():
-
-        if intent == "data type":
-            continue
-
-        for keyword in keywords:
-
-            if keyword in question_lower:
-                return intent
-
-    return "general"
-
-
-# ============================================================
-# EXTRACT TOPIC
-# ============================================================
-
-def extract_topic_from_question(
-    matched_question
-):
-
-    if not matched_question:
-        return None
-
-    topic = detect_explicit_topic(
-        matched_question
-    )
-
-    if topic:
-        return topic
+    if matches:
+        matches.sort(reverse=True)
+        return matches[0][1]
 
     return None
 
 
 # ============================================================
-# GET ACTIVE CONTEXT
+# EXTRACT GENERIC SUBJECT FROM PREVIOUS QUESTION
+# ============================================================
+# IMPORTANT:
+# This is the part that fixes questions such as:
+#
+# What is Precision?
+# What is its formula?
+#
+# Precision is NOT in TOPIC_KEYWORDS, so we cannot depend
+# only on TOPIC_KEYWORDS anymore.
+# ============================================================
+
+def extract_subject_from_question(question):
+
+    if not question:
+        return ""
+
+    q = normalize_text(question)
+
+    patterns = [
+
+        r"^what is (?:an |a |the )?(.+?)(?:\?)?$",
+
+        r"^what are (?:an |a |the )?(.+?)(?:\?)?$",
+
+        r"^define (?:an |a |the )?(.+?)(?:\?)?$",
+
+        r"^explain (?:an |a |the )?(.+?)(?:\?)?$",
+
+        r"^tell me about (?:an |a |the )?(.+?)(?:\?)?$",
+
+        r"^what does (.+?) mean(?:\?)?$"
+    ]
+
+    for pattern in patterns:
+
+        match = re.match(
+            pattern,
+            q
+        )
+
+        if match:
+
+            subject = match.group(1).strip()
+
+            # Do not treat pronouns as subjects.
+            if subject in {
+                "it",
+                "its",
+                "this",
+                "that",
+                "they",
+                "them",
+                "their"
+            }:
+                return ""
+
+            return subject
+
+    return ""
+
+
+# ============================================================
+# GET CURRENT ACTIVE CONTEXT
 # ============================================================
 
 def get_active_context():
-
-    # IMPORTANT:
-    # Only current session is used.
-    # Previous database chats are NOT used automatically.
-    # This prevents a New Chat from inheriting old context.
 
     messages = st.session_state.get(
         "messages",
@@ -881,61 +682,79 @@ def get_active_context():
             "matched_question": ""
         }
 
-    # Search latest assistant response
+    # Latest assistant answer + the user question before it.
     for i in range(
         len(messages) - 1,
         -1,
         -1
     ):
 
-        if messages[i]["role"] == "assistant":
+        if messages[i]["role"] != "assistant":
+            continue
 
-            previous_answer = messages[i].get(
-                "content",
-                ""
-            )
+        previous_answer = messages[i].get(
+            "content",
+            ""
+        )
 
-            matched_question = messages[i].get(
-                "matched_question",
-                ""
-            )
+        matched_question = messages[i].get(
+            "matched_question",
+            ""
+        )
 
-            previous_question = ""
+        previous_question = ""
 
-            for j in range(
-                i - 1,
-                -1,
-                -1
-            ):
+        for j in range(
+            i - 1,
+            -1,
+            -1
+        ):
 
-                if messages[j]["role"] == "user":
+            if messages[j]["role"] == "user":
 
-                    previous_question = (
-                        messages[j]["content"]
-                    )
-
-                    break
-
-            active_topic = (
-                extract_topic_from_question(
-                    matched_question
-                )
-            )
-
-            if not active_topic:
-
-                active_topic = (
-                    detect_explicit_topic(
-                        previous_question
-                    )
+                previous_question = messages[j].get(
+                    "content",
+                    ""
                 )
 
-            return {
-                "active_topic": active_topic,
-                "previous_question": previous_question,
-                "previous_answer": previous_answer,
-                "matched_question": matched_question
-            }
+                break
+
+        # First try known broad topic.
+        active_topic = detect_explicit_topic(
+            matched_question
+        )
+
+        if not active_topic:
+            active_topic = detect_explicit_topic(
+                previous_question
+            )
+
+        # CRITICAL FIX:
+        # If the subject is not one of the known topics,
+        # keep the actual previous subject.
+        if not active_topic:
+
+            active_topic = extract_subject_from_question(
+                matched_question
+            )
+
+        if not active_topic:
+
+            active_topic = extract_subject_from_question(
+                previous_question
+            )
+
+        # Last fallback: matched question itself.
+        if not active_topic and matched_question:
+
+            active_topic = matched_question
+
+        return {
+            "active_topic": active_topic,
+            "previous_question": previous_question,
+            "previous_answer": previous_answer,
+            "matched_question": matched_question
+        }
 
     return {
         "active_topic": None,
@@ -946,7 +765,222 @@ def get_active_context():
 
 
 # ============================================================
-# FIND BEST MATCH
+# DETECT FOLLOW-UP INTENT
+# ============================================================
+
+def detect_follow_up_intent(question):
+
+    q = normalize_text(
+        question
+    )
+
+    for intent, keywords in FOLLOW_UP_INTENT_KEYWORDS.items():
+
+        for keyword in sorted(
+            keywords,
+            key=len,
+            reverse=True
+        ):
+
+            keyword = normalize_text(keyword)
+
+            if re.search(
+                r"\b" + re.escape(keyword) + r"\b",
+                q
+            ):
+                return intent
+
+    return "general"
+
+
+# ============================================================
+# CHECK FOLLOW-UP QUESTION
+# ============================================================
+
+def is_follow_up_question(
+    current_question,
+    context
+):
+
+    current = normalize_text(
+        current_question
+    )
+
+    if not current:
+        return False
+
+    active_topic = context.get(
+        "active_topic"
+    )
+
+    if not active_topic:
+        return False
+
+    # Explicit known topic means a new topic.
+    explicit_topic = detect_explicit_topic(
+        current
+    )
+
+    if explicit_topic:
+        return False
+
+    # Direct references are definitely follow-ups.
+    reference_words = {
+        "it",
+        "its",
+        "it's",
+        "they",
+        "them",
+        "their",
+        "this",
+        "that",
+        "these",
+        "those",
+        "above",
+        "previous",
+        "earlier",
+        "same"
+    }
+
+    words = current.split()
+
+    if any(
+        word in reference_words
+        for word in words
+    ):
+        return True
+
+    # Intent-only questions are follow-ups.
+    intent = detect_follow_up_intent(
+        current
+    )
+
+    if intent != "general":
+
+        # Example:
+        # What is the formula?
+        # What is the algorithm?
+        # Give an example.
+        # How does it work?
+        if len(words) <= 10:
+            return True
+
+    # General short conversational questions.
+    follow_up_starts = [
+        "what is",
+        "what are",
+        "why",
+        "how",
+        "which",
+        "where",
+        "when",
+        "can you",
+        "could you",
+        "tell me more",
+        "explain more",
+        "explain further",
+        "describe"
+    ]
+
+    if len(words) <= 8 and any(
+        current.startswith(start)
+        for start in follow_up_starts
+    ):
+
+        # If it is a generic "what is X?" question,
+        # determine whether X is probably a new subject.
+        subject = extract_subject_from_question(
+            current
+        )
+
+        if subject:
+
+            previous_subject = (
+                extract_subject_from_question(
+                    context.get(
+                        "previous_question",
+                        ""
+                    )
+                )
+            )
+
+            # If the user says "what is the formula/algorithm",
+            # subject is not treated as a new concept.
+            if detect_follow_up_intent(current) != "general":
+                return True
+
+            # A different concrete subject is a new topic.
+            if previous_subject and subject != previous_subject:
+                return False
+
+        return True
+
+    return False
+
+
+# ============================================================
+# GET TOPIC CANDIDATES
+# ============================================================
+
+def get_topic_candidates(
+    active_topic
+):
+
+    if not active_topic:
+        return []
+
+    topic = normalize_text(
+        active_topic
+    )
+
+    # Known topic.
+    topic_keywords = TOPIC_KEYWORDS.get(
+        active_topic,
+        []
+    )
+
+    if topic_keywords:
+
+        search_terms = [
+            normalize_text(x)
+            for x in topic_keywords
+        ]
+
+    else:
+
+        # Generic subject such as "precision".
+        search_terms = [
+            topic
+        ]
+
+    candidate_indices = []
+
+    for index, question in enumerate(
+        df["question"]
+    ):
+
+        q = normalize_text(
+            question
+        )
+
+        if any(
+            re.search(
+                r"\b" + re.escape(term) + r"\b",
+                q
+            )
+            for term in search_terms
+            if term
+        ):
+
+            candidate_indices.append(
+                index
+            )
+
+    return candidate_indices
+
+
+# ============================================================
+# FIND BEST SEMANTIC MATCH
 # ============================================================
 
 def find_best_match(
@@ -996,22 +1030,16 @@ def find_best_match(
         ]
     )
 
-    best_score = float(
-        similarity_scores[
-            best_position
-        ]
-    )
-
     return {
-
         "index": best_index,
-
-        "score": best_score,
-
+        "score": float(
+            similarity_scores[
+                best_position
+            ]
+        ),
         "question": df.iloc[
             best_index
         ]["question"],
-
         "answer": df.iloc[
             best_index
         ]["answer"]
@@ -1019,50 +1047,30 @@ def find_best_match(
 
 
 # ============================================================
-# GET TOPIC CANDIDATES
-# ============================================================
-
-def get_topic_candidates(
-    active_topic
-):
-
-    if not active_topic:
-        return []
-
-    topic_keywords = TOPIC_KEYWORDS.get(
-        active_topic,
-        [active_topic]
-    )
-
-    candidate_indices = []
-
-    for index, question in enumerate(
-        df["question"]
-    ):
-
-        question_lower = normalize_text(
-            question
-        )
-
-        for keyword in topic_keywords:
-
-            if normalize_text(keyword) in question_lower:
-
-                candidate_indices.append(
-                    index
-                )
-
-                break
-
-    return candidate_indices
-
-
-# ============================================================
 # FIND CONTEXTUAL MATCH
+# ============================================================
+# This function does TWO searches:
+#
+# 1. Context search:
+#    previous topic + current follow-up
+#
+# 2. Direct search:
+#    current question alone
+#
+# Then it uses lexical intent matching to prefer a dataset
+# question about "formula", "algorithm", "example", etc.
+#
+# This prevents:
+# "What is Precision?"
+# "What is its formula?"
+#
+# from returning the original definition of Precision.
 # ============================================================
 
 def find_contextual_match(
     active_topic,
+    previous_question,
+    previous_answer,
     current_question
 ):
 
@@ -1070,129 +1078,162 @@ def find_contextual_match(
         current_question
     )
 
-    # Build focused query
-    if intent in [
-        "type",
-        "data type"
-    ]:
+    # Keep the previous question because it contains
+    # the actual concept even when that concept is not
+    # in TOPIC_KEYWORDS.
+    context_query_parts = [
+        str(active_topic),
+        previous_question,
+        current_question
+    ]
 
-        search_query = (
-            f"{active_topic} data types "
-            f"{current_question}"
+    if intent != "general":
+        context_query_parts.append(
+            intent
         )
 
-    elif intent == "example":
+    context_query = " ".join(
+        x for x in context_query_parts
+        if x
+    ).strip()
 
-        search_query = (
-            f"{active_topic} examples "
-            f"{current_question}"
-        )
-
-    elif intent == "application":
-
-        search_query = (
-            f"{active_topic} applications uses "
-            f"{current_question}"
-        )
-
-    elif intent == "advantage":
-
-        search_query = (
-            f"{active_topic} advantages benefits "
-            f"{current_question}"
-        )
-
-    elif intent == "disadvantage":
-
-        search_query = (
-            f"{active_topic} disadvantages limitations "
-            f"{current_question}"
-        )
-
-    elif intent == "feature":
-
-        search_query = (
-            f"{active_topic} features "
-            f"{current_question}"
-        )
-
-    elif intent == "function":
-
-        search_query = (
-            f"{active_topic} functions "
-            f"{current_question}"
-        )
-
-    elif intent == "method":
-
-        search_query = (
-            f"{active_topic} methods "
-            f"{current_question}"
-        )
-
-    elif intent == "difference":
-
-        search_query = (
-            f"{active_topic} difference comparison "
-            f"{current_question}"
-        )
-
-    elif intent == "working":
-
-        search_query = (
-            f"{active_topic} working "
-            f"{current_question}"
-        )
-
-    elif intent == "architecture":
-
-        search_query = (
-            f"{active_topic} architecture structure "
-            f"{current_question}"
-        )
-
-    elif intent == "process":
-
-        search_query = (
-            f"{active_topic} process steps "
-            f"{current_question}"
-        )
-
-    else:
-
-        search_query = (
-            f"{active_topic} "
-            f"{current_question}"
-        )
-
-    # Search only inside current active topic
+    # Search active-topic candidates first.
     candidate_indices = get_topic_candidates(
         active_topic
     )
 
+    # Get more than one candidate so we can rerank them.
     if candidate_indices:
 
-        match = find_best_match(
-            search_query,
-            candidate_indices
+        query_embedding = model.encode(
+            context_query,
+            normalize_embeddings=True
         )
 
-    else:
-
-        match = find_best_match(
-            search_query
+        candidate_embeddings = (
+            question_embeddings[
+                np.array(
+                    candidate_indices,
+                    dtype=int
+                )
+            ]
         )
 
-    if match is not None:
+        scores = cosine_similarity(
+            [query_embedding],
+            candidate_embeddings
+        )[0]
 
-        match["search_query"] = search_query
-        match["intent"] = intent
+        # Top semantic candidates.
+        top_positions = np.argsort(
+            scores
+        )[::-1][:20]
 
-    return match
+        best = None
+        best_rank_score = -999.0
+
+        current_words = set(
+            normalize_text(
+                current_question
+            ).split()
+        )
+
+        intent_words = set(
+            normalize_text(
+                " ".join(
+                    FOLLOW_UP_INTENT_KEYWORDS.get(
+                        intent,
+                        []
+                    )
+                )
+            ).split()
+        )
+
+        for position in top_positions:
+
+            index = candidate_indices[
+                int(position)
+            ]
+
+            question_text = str(
+                df.iloc[index]["question"]
+            )
+
+            normalized_question = normalize_text(
+                question_text
+            )
+
+            question_words = set(
+                normalized_question.split()
+            )
+
+            semantic_score = float(
+                scores[int(position)]
+            )
+
+            # Count overlap with the requested intent.
+            intent_overlap = len(
+                question_words.intersection(
+                    intent_words
+                )
+            )
+
+            # Direct overlap with words in the current
+            # question also helps.
+            current_overlap = len(
+                question_words.intersection(
+                    current_words
+                )
+            )
+
+            # Small reranking boost for the requested intent.
+            rank_score = (
+                semantic_score
+                + min(intent_overlap, 3) * 0.025
+                + min(current_overlap, 3) * 0.008
+            )
+
+            if rank_score > best_rank_score:
+
+                best_rank_score = rank_score
+
+                best = {
+                    "index": int(index),
+                    "score": semantic_score,
+                    "question": question_text,
+                    "answer": df.iloc[
+                        index
+                    ]["answer"]
+                }
+
+        if best is not None:
+
+            best["search_query"] = (
+                context_query
+            )
+
+            best["intent"] = intent
+
+            return best
+
+    # Final fallback: complete dataset.
+    direct = find_best_match(
+        context_query
+    )
+
+    if direct is not None:
+
+        direct["search_query"] = (
+            context_query
+        )
+
+        direct["intent"] = intent
+
+    return direct
 
 
 # ============================================================
-# BUILD CONTEXT-AWARE QUERY
+# BUILD CONTEXT QUERY
 # ============================================================
 
 def build_context_query(
@@ -1203,66 +1244,47 @@ def build_context_query(
         current_question.strip()
     )
 
-    # Explicit topic = new topic
     explicit_topic = detect_explicit_topic(
         current_question
     )
 
+    # Known explicit topic = new topic.
     if explicit_topic:
 
         return {
-
             "used_context": False,
-
             "active_topic": explicit_topic,
-
             "query": current_question,
-
             "intent": "new topic",
-
             "context": []
         }
 
-    # Get current conversation context
     context = get_active_context()
 
     active_topic = context[
         "active_topic"
     ]
 
-    # No current topic
     if not active_topic:
 
         return {
-
             "used_context": False,
-
             "active_topic": None,
-
             "query": current_question,
-
             "intent": "new topic",
-
             "context": []
         }
 
-    # Check follow-up
-    follow_up = needs_context(
-        current_question
-    )
-
-    if not follow_up:
+    if not is_follow_up_question(
+        current_question,
+        context
+    ):
 
         return {
-
             "used_context": False,
-
             "active_topic": None,
-
             "query": current_question,
-
             "intent": "new topic",
-
             "context": []
         }
 
@@ -1270,22 +1292,26 @@ def build_context_query(
         current_question
     )
 
-    focused_query = (
-        f"{active_topic} "
-        f"{current_question}"
+    search_query = " ".join(
+        x for x in [
+            str(active_topic),
+            context["previous_question"],
+            current_question,
+            intent if intent != "general" else ""
+        ]
+        if x
     )
 
     return {
-
         "used_context": True,
-
         "active_topic": active_topic,
-
-        "query": focused_query,
-
+        "query": search_query,
         "intent": intent,
-
-        "context": [active_topic]
+        "context": [active_topic],
+        "previous_question":
+            context["previous_question"],
+        "previous_answer":
+            context["previous_answer"]
     }
 
 
@@ -1302,31 +1328,20 @@ def get_answer(
         user_question.strip()
     )
 
-    # Empty input
     if not user_question:
 
         return {
-
             "answer": "Please enter a question.",
-
             "matched_question": None,
-
             "score": 0.0,
-
             "matched": False,
-
             "context_used": False,
-
             "context_questions": [],
-
             "search_query": "",
-
             "active_topic": None,
-
             "intent": "none"
         }
 
-    # Build context
     context_result = build_context_query(
         user_question
     )
@@ -1340,150 +1355,124 @@ def get_answer(
     ]
 
     # ========================================================
-    # NEW TOPIC
+    # FOLLOW-UP
     # ========================================================
 
-    if not context_used:
+    if context_used:
 
-        direct_match = find_best_match(
-            user_question
-        )
-
-        if direct_match is None:
-
-            return {
-
-                "answer":
-                    "Sorry, I do not have information related to this question.",
-
-                "matched_question": None,
-
-                "score": 0.0,
-
-                "matched": False,
-
-                "context_used": False,
-
-                "context_questions": [],
-
-                "search_query": user_question,
-
-                "active_topic": active_topic,
-
-                "intent": "new topic"
-            }
-
-        best_score = direct_match["score"]
-        best_question = direct_match["question"]
-        best_answer = direct_match["answer"]
-
-        search_query = user_question
-        intent = "new topic"
-        context_questions = []
-
-    # ========================================================
-    # FOLLOW-UP QUESTION
-    # ========================================================
-
-    else:
-
-        contextual_match = find_contextual_match(
+        match = find_contextual_match(
             active_topic,
+            context_result.get(
+                "previous_question",
+                ""
+            ),
+            context_result.get(
+                "previous_answer",
+                ""
+            ),
             user_question
         )
 
-        if contextual_match is None:
+        if match is None:
 
             return {
-
                 "answer":
                     "Sorry, I do not have information related to this question.",
-
                 "matched_question": None,
-
                 "score": 0.0,
-
                 "matched": False,
-
                 "context_used": True,
-
                 "context_questions": [active_topic],
-
-                "search_query": user_question,
-
+                "search_query":
+                    context_result["query"],
                 "active_topic": active_topic,
-
-                "intent": detect_follow_up_intent(
-                    user_question
-                )
+                "intent":
+                    context_result["intent"]
             }
 
-        best_score = contextual_match["score"]
-        best_question = contextual_match["question"]
-        best_answer = contextual_match["answer"]
+        best_score = match["score"]
+        best_question = match["question"]
+        best_answer = match["answer"]
 
-        search_query = contextual_match[
-            "search_query"
-        ]
+        search_query = match.get(
+            "search_query",
+            context_result["query"]
+        )
 
-        intent = contextual_match[
-            "intent"
-        ]
+        intent = match.get(
+            "intent",
+            context_result["intent"]
+        )
 
         context_questions = [
             active_topic
         ]
 
     # ========================================================
-    # SIMILARITY THRESHOLD
+    # NEW / DIRECT QUESTION
+    # ========================================================
+
+    else:
+
+        match = find_best_match(
+            user_question
+        )
+
+        if match is None:
+
+            return {
+                "answer":
+                    "Sorry, I do not have information related to this question.",
+                "matched_question": None,
+                "score": 0.0,
+                "matched": False,
+                "context_used": False,
+                "context_questions": [],
+                "search_query": user_question,
+                "active_topic": active_topic,
+                "intent": "new topic"
+            }
+
+        best_score = match["score"]
+        best_question = match["question"]
+        best_answer = match["answer"]
+
+        search_query = user_question
+        intent = "new topic"
+        context_questions = []
+
+    # ========================================================
+    # THRESHOLD
     # ========================================================
 
     if best_score >= threshold:
 
         return {
-
             "answer": best_answer,
-
             "matched_question": best_question,
-
             "score": best_score,
-
             "matched": True,
-
             "context_used": context_used,
-
             "context_questions": context_questions,
-
             "search_query": search_query,
-
             "active_topic": active_topic,
-
             "intent": intent
         }
 
     # ========================================================
-    # EXACT FALLBACK
+    # FALLBACK
     # ========================================================
 
     return {
-
         "answer":
             "Sorry, I do not have information related to this question.",
-
         "matched_question": best_question,
-
         "score": best_score,
-
         "matched": False,
-
         "context_used": context_used,
-
         "context_questions": context_questions,
-
         "search_query": search_query,
-
         "active_topic": active_topic,
-
         "intent": intent
     }
 
